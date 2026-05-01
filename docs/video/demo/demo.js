@@ -28,9 +28,6 @@ const VIDEO_DIR = path.resolve(__dirname, "..", ".video-tmp");
 const FINAL_PATH = path.resolve(__dirname, "..", "recording.webm");
 
 const CHAT_MSG_1 = "audit my ssh and tell me the most severe issue";
-const CHAT_MSG_2 =
-  "create a linux user named demo with sudo, password tempBeacon42, " +
-  "and ssh key ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDfakekey99 test@beacon";
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -120,11 +117,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   }
   await sleep(13500); // ends ~0:46 (findings rendered)
 
-  // ───── 0:46 — chat msg #1 ─────
-  // Buffered for Groq variance (cold model + occasional 429 retry can add
-  // 3-5s). If response is fast, we sit on the rendered answer for the rest
-  // of the buffer — that's fine, the voiceover narrates over it.
-  console.log("[0:46] chat: msg #1");
+  // ───── 0:46 — open chat, send the audit question, let the agent answer ─────
+  // We only ask ONE chat question (the audit query). The narration mentions
+  // destructive actions are gated by confirmation, but we don't actually
+  // trigger one in the demo — that avoids leaving the chat drawer's modal
+  // overlay covering the page if the agent stalls.
+  console.log("[0:46] chat: send audit question");
   await page.getByRole("button", { name: /Ask MonitShark/i }).click();
   await sleep(800);
   const textarea = page.locator('[role="dialog"] textarea').last();
@@ -132,32 +130,21 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await textarea.type(CHAT_MSG_1, { delay: 18 });
   await sleep(200);
   await textarea.press("Enter");
-  await sleep(13000); // ends ~0:60  (was 11s, +2s safety)
+  // Generous wait so the audit tool runs + the answer streams in.
+  await sleep(22000);
 
-  // ───── 0:58 — chat msg #2 + click Allow ─────
-  // Allow timeout bumped to 22s — destructive tool calls go through the
-  // confirmation gate and Groq sometimes retries 1-2x before tool_calls
-  // come back parsed. If Allow truly never appears we just move on; the
-  // tour after this still works.
-  console.log("[0:60] chat: msg #2 + Allow");
-  await textarea.click();
-  await textarea.type(CHAT_MSG_2, { delay: 14 });
-  await sleep(200);
-  await textarea.press("Enter");
-  try {
-    await page.getByRole("button", { name: /^Allow$/i }).click({ timeout: 22000 });
-    console.log("   ✓ Allow clicked — waiting for tool_result");
-  } catch {
-    console.log("   ⚠ Allow button never appeared in 22s (agent may have rate-limited or refused); continuing tour");
-  }
-  await sleep(9000); // ends ~0:91 in worst case  (was 7s, +2s safety)
+  // Close the Sheet drawer cleanly so its overlay stops intercepting
+  // sidebar clicks. Escape dismisses Radix Sheet/Dialog by default.
+  console.log("[chat done] closing drawer");
+  await page.keyboard.press("Escape");
+  await sleep(900); // wait for the overlay fade-out animation
 
-  // ───── tour (timing flexes if chat ran long) ─────
+  // ───── tour ─────
   console.log("[tour] firewall → updates → docker → permissions");
-  await page.click('a[href="/firewall"]');     await sleep(4000);
-  await page.click('a[href="/updates"]');      await sleep(4000);
-  await page.click('a[href="/docker"]');       await sleep(4000);
-  await page.click('a[href="/permissions"]');  await sleep(3500);
+  await page.click('a[href="/firewall"]');     await sleep(4500);
+  await page.click('a[href="/updates"]');      await sleep(4500);
+  await page.click('a[href="/docker"]');       await sleep(4500);
+  await page.click('a[href="/permissions"]');  await sleep(4500);
 
   console.log("[done] closing browser, saving recording");
 
