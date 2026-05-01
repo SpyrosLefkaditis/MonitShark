@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # Required (defaults make local dev easy; production must set these)
     groq_api_key: str = ""
+    groq_model: str = "llama-3.1-8b-instant"  # higher TPM than 70b on free tier
     jwt_secret: str = "dev-only-replace-me-please"
 
     # Paths
