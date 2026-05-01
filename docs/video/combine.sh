@@ -25,26 +25,36 @@ done
 # 1) Re-encode the screen capture to a known fps + 1080p + with the voiceover
 #    on its audio track (drop any original audio; pad/trim to voiceover length).
 VOICE_LEN=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$VOICE")
-echo "voiceover length: ${VOICE_LEN}s"
+CAP_LEN=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$CAPTURE")
+echo "voiceover: ${VOICE_LEN}s   capture: ${CAP_LEN}s"
 
+# Bound the apad output explicitly to the capture's length so the audio
+# doesn't pad forever (which would hit a buffer ceiling and ffmpeg fails
+# with a misleading "No space left on device" mid-encode).
 ffmpeg -loglevel error -y \
     -i "$CAPTURE" -i "$VOICE" \
-    -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1:color=black,fps=30,setsar=1[v];[1:a]apad[a]" \
-    -map "[v]" -map "[a]" -shortest \
-    -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k \
+    -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1:color=black,fps=30,setsar=1[v];[1:a]apad=whole_dur=${CAP_LEN},aformat=channel_layouts=stereo:sample_rates=48000[a]" \
+    -map "[v]" -map "[a]" -t "$CAP_LEN" \
+    -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 -ac 2 \
     "$DIR/.middle.mp4"
 
 # 2) Concat intro + middle + outro (all 1920x1080, 30fps, AAC).
 #    Use the concat demuxer with a list file so streams are normalised first.
-ffmpeg -loglevel error -y -i "$INTRO" \
+ffmpeg -loglevel error -y \
+    -i "$INTRO" \
+    -f lavfi -t 5 -i "anullsrc=channel_layout=stereo:sample_rate=48000" \
     -filter_complex "[0:v]fps=30,scale=1920:1080,setsar=1[v]" \
-    -map "[v]" -f lavfi -t 5 -i anullsrc=channel_layout=stereo:sample_rate=48000 \
-    -map 1:a -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -t 5 "$DIR/.intro_av.mp4"
+    -map "[v]" -map "1:a" \
+    -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 -ac 2 -t 5 \
+    "$DIR/.intro_av.mp4"
 
-ffmpeg -loglevel error -y -i "$OUTRO" \
+ffmpeg -loglevel error -y \
+    -i "$OUTRO" \
+    -f lavfi -t 5 -i "anullsrc=channel_layout=stereo:sample_rate=48000" \
     -filter_complex "[0:v]fps=30,scale=1920:1080,setsar=1[v]" \
-    -map "[v]" -f lavfi -t 5 -i anullsrc=channel_layout=stereo:sample_rate=48000 \
-    -map 1:a -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -t 5 "$DIR/.outro_av.mp4"
+    -map "[v]" -map "1:a" \
+    -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 -ac 2 -t 5 \
+    "$DIR/.outro_av.mp4"
 
 cat > "$DIR/.concat.txt" <<EOF
 file '$DIR/.intro_av.mp4'
