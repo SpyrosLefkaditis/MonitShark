@@ -121,6 +121,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await sleep(13500); // ends ~0:46 (findings rendered)
 
   // ───── 0:46 — chat msg #1 ─────
+  // Buffered for Groq variance (cold model + occasional 429 retry can add
+  // 3-5s). If response is fast, we sit on the rendered answer for the rest
+  // of the buffer — that's fine, the voiceover narrates over it.
   console.log("[0:46] chat: msg #1");
   await page.getByRole("button", { name: /Ask MonitShark/i }).click();
   await sleep(800);
@@ -129,29 +132,34 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   await textarea.type(CHAT_MSG_1, { delay: 18 });
   await sleep(200);
   await textarea.press("Enter");
-  await sleep(11000); // ends ~0:58
+  await sleep(13000); // ends ~0:60  (was 11s, +2s safety)
 
   // ───── 0:58 — chat msg #2 + click Allow ─────
-  console.log("[0:58] chat: msg #2 + Allow");
+  // Allow timeout bumped to 22s — destructive tool calls go through the
+  // confirmation gate and Groq sometimes retries 1-2x before tool_calls
+  // come back parsed. If Allow truly never appears we just move on; the
+  // tour after this still works.
+  console.log("[0:60] chat: msg #2 + Allow");
   await textarea.click();
   await textarea.type(CHAT_MSG_2, { delay: 14 });
   await sleep(200);
   await textarea.press("Enter");
   try {
-    await page.getByRole("button", { name: /^Allow$/i }).click({ timeout: 12000 });
+    await page.getByRole("button", { name: /^Allow$/i }).click({ timeout: 22000 });
+    console.log("   ✓ Allow clicked — waiting for tool_result");
   } catch {
-    console.log("   (Allow button never appeared — agent may have rate-limited; continuing tour)");
+    console.log("   ⚠ Allow button never appeared in 22s (agent may have rate-limited or refused); continuing tour");
   }
-  await sleep(7000); // ends ~0:73
+  await sleep(9000); // ends ~0:91 in worst case  (was 7s, +2s safety)
 
-  // ───── 0:73 — quick tour ─────
-  console.log("[0:73] tour");
-  await page.click('a[href="/firewall"]');     await sleep(4500);
-  await page.click('a[href="/updates"]');      await sleep(4500);
-  await page.click('a[href="/docker"]');       await sleep(4500);
-  await page.click('a[href="/permissions"]');  await sleep(4000);
+  // ───── tour (timing flexes if chat ran long) ─────
+  console.log("[tour] firewall → updates → docker → permissions");
+  await page.click('a[href="/firewall"]');     await sleep(4000);
+  await page.click('a[href="/updates"]');      await sleep(4000);
+  await page.click('a[href="/docker"]');       await sleep(4000);
+  await page.click('a[href="/permissions"]');  await sleep(3500);
 
-  console.log("[0:91] done — closing browser, saving recording");
+  console.log("[done] closing browser, saving recording");
 
   // Closing the context flushes the video to disk.
   const video = page.video();
