@@ -41,6 +41,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log("Launching Chromium…");
   const browser = await chromium.launch({
     headless: false,
+    // ignoreDefaultArgs strips Playwright's --enable-automation flag, which
+    // is what triggers the "Chrome is being controlled by automated test
+    // software" grey infobar. Combined with --disable-blink-features the
+    // browser looks like a normal user session.
+    ignoreDefaultArgs: ["--enable-automation"],
     args: [
       "--window-size=1920,1080",
       "--window-position=0,0",
@@ -49,6 +54,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       "--no-default-browser-check",
       "--no-first-run",
       "--ignore-certificate-errors",
+      "--disable-blink-features=AutomationControlled",
+      "--test-type",
     ],
   });
 
