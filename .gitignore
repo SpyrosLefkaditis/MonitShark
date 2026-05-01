@@ -34,6 +34,10 @@ docs/video/voiceover.mp3
 docs/video/screen-capture*.mp4
 docs/video/final.mp4
 
+# Playwright browsers + the venv used by build.sh
+docs/video/.tts-venv/
+docs/video/demo/node_modules/
+
 # Editor / OS
 .idea/
 .vscode/

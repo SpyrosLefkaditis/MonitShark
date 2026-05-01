@@ -1,0 +1,11 @@
+{
+  "name": "monitshark-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "demo": "node demo.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

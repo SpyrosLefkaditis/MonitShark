@@ -24,27 +24,27 @@ EDGE="$VENV/bin/edge-tts"
     --write-media "$DIR/voiceover.mp3"
 
 # 3) Intro card (1920x1080).
-convert -size 1920x1080 xc:'#0a0a0c' \
-    \( "$LOGO" -resize 360x360 -background none \) \
-        -gravity center -geometry +0-180 -composite \
-    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 110 -fill '#fafafa' \
-        -gravity center -annotate +0+80 'MonitShark' \
-    -font /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf -pointsize 36 -fill '#a3a3a8' \
-        -gravity center -annotate +0+180 'AI-native Linux server admin console' \
+convert -size 1920x1080 xc:'#212429' \
+    \( "$LOGO" -resize 720x393 -background none \) \
+        -gravity center -geometry +0-160 -composite \
+    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 108 -fill '#fafafa' \
+        -gravity center -annotate +0+150 'MonitShark' \
+    -font /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf -pointsize 34 -fill '#bfbfc4' \
+        -gravity center -annotate +0+250 'AI-native Linux server admin console' \
     -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 22 -fill '#f59e0b' \
-        -gravity south -annotate +0+80 'Synapse Innovation Hack 2026' \
+        -gravity south -annotate +0+70 'Synapse Innovation Hack 2026' \
     "$DIR/intro.png"
 
 # 4) Outro card.
-convert -size 1920x1080 xc:'#0a0a0c' \
-    \( "$LOGO" -resize 320x320 -background none \) \
+convert -size 1920x1080 xc:'#212429' \
+    \( "$LOGO" -resize 600x327 -background none \) \
         -gravity center -geometry +0-200 -composite \
-    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 86 -fill '#fafafa' \
-        -gravity center -annotate +0+30 'Self-hosted. AI-acted.' \
-    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 86 -fill '#f59e0b' \
-        -gravity center -annotate +0+135 'Human-approved.' \
-    -font /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf -pointsize 26 -fill '#a3a3a8' \
-        -gravity south -annotate +0+80 'MonitShark — Synapse Innovation Hack 2026' \
+    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 78 -fill '#fafafa' \
+        -gravity center -annotate +0+90 'Self-hosted. AI-acted.' \
+    -font /usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf -pointsize 78 -fill '#f59e0b' \
+        -gravity center -annotate +0+185 'Human-approved.' \
+    -font /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf -pointsize 24 -fill '#bfbfc4' \
+        -gravity south -annotate +0+70 'MonitShark — Synapse Innovation Hack 2026' \
     "$DIR/outro.png"
 
 # 5) PNG → 5s MP4 with cross-fades.
