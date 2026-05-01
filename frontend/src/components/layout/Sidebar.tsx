@@ -1,0 +1,54 @@
+import { Clock, LayoutDashboard, ScrollText, Settings2, ShieldCheck } from "lucide-react";
+import { NavLink } from "react-router-dom";
+
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+import { ThemeToggle } from "./ThemeToggle";
+
+const items = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/services", label: "Services", icon: Settings2 },
+  { to: "/cron", label: "Cron", icon: Clock },
+  { to: "/audit", label: "Audit", icon: ShieldCheck },
+  { to: "/logs", label: "Logs", icon: ScrollText },
+];
+
+export function Sidebar() {
+  return (
+    <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
+      <div className="p-4 flex items-center gap-2.5">
+        <div className="size-8 rounded-md bg-primary/15 grid place-items-center text-primary">
+          <ShieldCheck className="size-4" />
+        </div>
+        <div className="font-semibold tracking-tight">Beacon</div>
+      </div>
+      <Separator />
+      <nav className="flex-1 p-2 space-y-1">
+        {items.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                isActive
+                  ? "bg-accent text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+              )
+            }
+          >
+            <Icon className="size-4" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+      <Separator />
+      <div className="p-3 flex items-center justify-between">
+        <span className="text-xs text-muted-foreground font-mono">v0.1.0</span>
+        <ThemeToggle />
+      </div>
+    </aside>
+  );
+}

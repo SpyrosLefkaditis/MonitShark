@@ -1,15 +1,43 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { RootLayout } from "@/components/layout/RootLayout";
+import { AuditPage } from "@/pages/AuditPage";
+import { CronPage } from "@/pages/CronPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { LogsPage } from "@/pages/LogsPage";
+import { NotFoundPage } from "@/pages/NotFoundPage";
+import { ServicesPage } from "@/pages/ServicesPage";
+import { ThemeProvider } from "@/theme/provider";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 5_000, refetchOnWindowFocus: false },
+  },
+});
+
 export default function App() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-      <div className="text-center animate-fade-in">
-        <h1 className="text-4xl font-semibold tracking-tight">Beacon</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          AI-Native Linux Server Admin Console
-        </p>
-        <p className="mt-6 text-xs text-muted-foreground/70 font-mono">
-          v0.1.0 · bootstrap phase
-        </p>
-      </div>
-    </div>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider delayDuration={300}>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<RootLayout />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="/services" element={<ServicesPage />} />
+                <Route path="/cron" element={<CronPage />} />
+                <Route path="/audit" element={<AuditPage />} />
+                <Route path="/logs" element={<LogsPage />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

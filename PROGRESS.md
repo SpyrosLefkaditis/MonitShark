@@ -5,7 +5,7 @@ Tracks `/loop` phase completion. Source of truth for "what's the next phase to r
 ## Phases
 
 - [x] **Phase 0** — Repo bootstrap & one-command compose — *2026-05-01*
-- [ ] **Phase 1** — Frontend layout, theme, design system
+- [x] **Phase 1** — Frontend layout, theme, design system — *2026-05-01*
 - [ ] **Phase 2** — Backend read-only system surface + REST
 - [ ] **Phase 3** — WebSocket metrics + alerts engine
 - [ ] **Phase 4** — Frontend pages with REST data
@@ -29,6 +29,22 @@ Tracks `/loop` phase completion. Source of truth for "what's the next phase to r
 
 **Runtime verification (deferred to user environment):** the user runs `docker compose up -d --build` on their target host with a real `.env`; they then verify with the curl/browser checks listed in the plan §12.
 
+## Phase 1 — completed 2026-05-01
+
+**Files added** (frontend):
+
+- `src/lib/utils.ts` — `cn()` helper.
+- `src/theme/provider.tsx` — `<ThemeProvider>` + `useTheme()` (light/dark, persisted in localStorage, follows system on first load).
+- `src/components/ui/*` (16 primitives) — Button, Card (+ Header/Title/Description/Content/Footer), Input, Textarea, Label, Badge, Skeleton, Separator, Dialog (+ Header/Footer/Title/Description/Overlay/Trigger/Close/Portal), Sheet (right-drawer for chat, with cva-driven `side` variants), Tooltip (+ Provider), ScrollArea (+ ScrollBar), Select (full Radix surface), Switch, Tabs (List/Trigger/Content), Sonner Toaster (theme-integrated wrapper).
+- `src/components/layout/*` — RootLayout (sidebar + topbar + main + chat-drawer-Sheet), Sidebar (5 NavLinks with lucide icons + brand), Topbar (page title + AlertsBadge + "Ask Beacon" button), ThemeToggle (sun/moon button), AlertsBadge (stub returning count=0; Phase 3 wires to /api/alerts).
+- `src/pages/*` — DashboardPage, ServicesPage, CronPage, AuditPage, LogsPage, NotFoundPage. Each is a placeholder Card describing what lands in later phases.
+- `src/App.tsx` — composes ThemeProvider → QueryClientProvider → TooltipProvider → BrowserRouter → Routes (RootLayout wraps all routes) + Toaster.
+
+**Verification:**
+- Frontend Docker image builds clean (`tsc -b` + `vite build`). Bundle: 330 kB JS / 24 kB CSS (105 kB gzipped JS).
+- No TypeScript errors with `strict: true`.
+- All 16 primitives import from packages already pinned in `package.json` (no missing deps).
+
 ## Next phase
 
-Phase 1 — extends `frontend/src/styles/globals.css` (already has full HSL vars in Phase 0), then adds the theme provider, Button + Card primitives, and the rest of the shadcn primitives needed for the layout. Builds RootLayout + Sidebar + Topbar + ThemeToggle and the 5 route stubs.
+Phase 2 — Backend read-only system surface + REST. Adds `app/config.py`, `app/auth.py`, `app/db.py`, `app/schemas.py`, `app/util/{sh,nsenter,paths}.py`, `app/metrics.py` (psutil), `app/services.py` (pystemd + nsenter fallback), `app/cron.py` (python-crontab), `app/logs.py` (tail/search), `app/audits/{ssh,users,permissions,packages}.py`, and the route handlers under `app/routes/`. Bearer-token auth dep on every protected route.
