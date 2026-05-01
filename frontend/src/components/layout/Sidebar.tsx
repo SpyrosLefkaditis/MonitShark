@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
+import logoUrl from "@/images/logo.png";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
@@ -36,9 +37,11 @@ export function Sidebar() {
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-card flex flex-col">
       <div className="p-4 flex items-center gap-2.5">
-        <div className="size-8 rounded-md bg-primary/15 grid place-items-center text-primary">
-          <ShieldCheck className="size-4" />
-        </div>
+        <img
+          src={logoUrl}
+          alt="MonitShark"
+          className="size-9 rounded-md object-contain shrink-0"
+        />
         <div className="font-semibold tracking-tight">MonitShark</div>
       </div>
       <Separator />

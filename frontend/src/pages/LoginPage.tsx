@@ -1,10 +1,10 @@
 import { isAxiosError } from "axios";
-import { ShieldCheck } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { useAuth } from "@/auth/AuthProvider";
+import logoUrl from "@/images/logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,9 +43,11 @@ export function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="flex items-center gap-2.5 mb-1">
-            <div className="size-8 rounded-md bg-primary/15 grid place-items-center text-primary">
-              <ShieldCheck className="size-4" />
-            </div>
+            <img
+              src={logoUrl}
+              alt="MonitShark"
+              className="size-10 rounded-md object-contain shrink-0"
+            />
             <CardTitle className="text-base">MonitShark</CardTitle>
           </div>
           <CardDescription>Sign in to administer this host.</CardDescription>

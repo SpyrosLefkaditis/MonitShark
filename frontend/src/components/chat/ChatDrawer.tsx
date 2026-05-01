@@ -1,6 +1,7 @@
 import { Eraser } from "lucide-react";
 
 import { useChat } from "@/chat/ChatProvider";
+import logoUrl from "@/images/logo.png";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 
@@ -20,9 +21,11 @@ export function ChatDrawer() {
       >
         <header className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-md bg-primary/15 grid place-items-center text-primary">
-              <span className="text-xs font-bold">M</span>
-            </div>
+            <img
+              src={logoUrl}
+              alt="MonitShark"
+              className="size-8 rounded-md object-contain shrink-0"
+            />
             <div>
               <div className="text-sm font-semibold leading-tight">MonitShark AI</div>
               <div className="text-[11px] text-muted-foreground leading-tight">
