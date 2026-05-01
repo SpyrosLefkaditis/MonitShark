@@ -25,6 +25,15 @@ coverage/
 /config/
 !/config.example/
 
+# Generated demo-video artifacts (regenerable via docs/video/build.sh)
+docs/video/intro.png
+docs/video/outro.png
+docs/video/intro.mp4
+docs/video/outro.mp4
+docs/video/voiceover.mp3
+docs/video/screen-capture*.mp4
+docs/video/final.mp4
+
 # Editor / OS
 .idea/
 .vscode/
