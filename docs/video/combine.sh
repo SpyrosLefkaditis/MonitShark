@@ -11,7 +11,7 @@
 set -eu
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
-CAPTURE="${1:?usage: $0 <screen-capture.mp4> [output.mp4]}"
+CAPTURE="${1:?usage: $0 <screen-capture.mp4|.webm> [output.mp4]}"
 OUTPUT="${2:-$DIR/final.mp4}"
 
 INTRO="$DIR/intro.mp4"

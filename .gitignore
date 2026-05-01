@@ -33,6 +33,8 @@ docs/video/outro.mp4
 docs/video/voiceover.mp3
 docs/video/screen-capture*.mp4
 docs/video/final.mp4
+docs/video/recording.webm
+docs/video/.video-tmp/
 
 # Playwright browsers + the venv used by build.sh
 docs/video/.tts-venv/
