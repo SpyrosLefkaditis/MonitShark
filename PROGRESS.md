@@ -11,7 +11,7 @@ Tracks `/loop` phase completion. Source of truth for "what's the next phase to r
 - [x] **Phase 4** — Frontend pages with REST data — *2026-05-01*
 - [x] **Phase 5** — Live metrics over WebSocket — *2026-05-01* (chat drawer + Phase 6 client wiring landed in same slice)
 - [x] **Phase 6** — Agent skeleton with read-only tools — *2026-05-01*
-- [ ] **Phase 7** — Confirmation gate + write tools
+- [x] **Phase 7** — Confirmation gate + write tools + new feature pages — *2026-05-02*
 - [ ] **Phase 8** — Polish, tests, writeup, demo video
 
 ## Phase 0 — completed 2026-05-01

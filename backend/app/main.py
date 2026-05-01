@@ -19,11 +19,22 @@ from app.routes import (
     auth as auth_routes,
     chat as chat_routes,
     cron as cron_routes,
+    docker as docker_routes,
+    firewall as firewall_routes,
     health as health_routes,
     logs as logs_routes,
     metrics as metrics_routes,
+    permissions as permissions_routes,
+    scripts as scripts_routes,
     services as services_routes,
+    updates as updates_routes,
+    users as users_routes,
 )
+# `system` route module may not exist yet (still being written) — best-effort import.
+try:
+    from app.routes import system as system_routes  # type: ignore[no-redef]
+except ImportError:
+    system_routes = None
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -95,11 +106,21 @@ def create_app() -> FastAPI:
     app.include_router(logs_routes.router)
     app.include_router(audits_routes.router)
     app.include_router(alerts_routes.router)
+    app.include_router(scripts_routes.router)
+    app.include_router(permissions_routes.router)
+    app.include_router(users_routes.router)
+    app.include_router(firewall_routes.router)
+    app.include_router(updates_routes.router)
+    app.include_router(docker_routes.router)
+    if system_routes is not None and hasattr(system_routes, "router"):
+        app.include_router(system_routes.router)
     app.include_router(chat_routes.router)
 
     # WebSockets
     app.include_router(metrics_routes.ws_router)
     app.include_router(chat_routes.ws_router)
+    if hasattr(docker_routes, "ws_router"):
+        app.include_router(docker_routes.ws_router)
 
     return app
 

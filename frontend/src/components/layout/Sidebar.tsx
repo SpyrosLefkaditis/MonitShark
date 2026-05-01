@@ -1,4 +1,16 @@
-import { Clock, LayoutDashboard, ScrollText, Settings2, ShieldCheck } from "lucide-react";
+import {
+  Boxes,
+  Clock,
+  Cpu,
+  Download,
+  FileCode,
+  FileLock,
+  Flame,
+  LayoutDashboard,
+  ScrollText,
+  Settings2,
+  ShieldCheck,
+} from "lucide-react";
 import { NavLink } from "react-router-dom";
 
 import { Separator } from "@/components/ui/separator";
@@ -8,9 +20,15 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const items = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/system", label: "System", icon: Cpu },
   { to: "/services", label: "Services", icon: Settings2 },
+  { to: "/docker", label: "Docker", icon: Boxes },
   { to: "/cron", label: "Cron", icon: Clock },
+  { to: "/scripts", label: "Scripts", icon: FileCode },
   { to: "/audit", label: "Audit", icon: ShieldCheck },
+  { to: "/firewall", label: "Firewall", icon: Flame },
+  { to: "/updates", label: "Updates", icon: Download },
+  { to: "/permissions", label: "Permissions", icon: FileLock },
   { to: "/logs", label: "Logs", icon: ScrollText },
 ];
 

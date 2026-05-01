@@ -10,10 +10,16 @@ import { RootLayout } from "@/components/layout/RootLayout";
 import { AuditPage } from "@/pages/AuditPage";
 import { CronPage } from "@/pages/CronPage";
 import { DashboardPage } from "@/pages/DashboardPage";
+import { DockerPage } from "@/pages/DockerPage";
+import { FirewallPage } from "@/pages/FirewallPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { LogsPage } from "@/pages/LogsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
+import { PermissionsPage } from "@/pages/PermissionsPage";
+import { ScriptsPage } from "@/pages/ScriptsPage";
 import { ServicesPage } from "@/pages/ServicesPage";
+import { SystemPage } from "@/pages/SystemPage";
+import { UpdatesPage } from "@/pages/UpdatesPage";
 import { ThemeProvider } from "@/theme/provider";
 
 const queryClient = new QueryClient({
@@ -45,6 +51,12 @@ export default function App() {
                   <Route path="/cron" element={<CronPage />} />
                   <Route path="/audit" element={<AuditPage />} />
                   <Route path="/logs" element={<LogsPage />} />
+                  <Route path="/firewall" element={<FirewallPage />} />
+                  <Route path="/updates" element={<UpdatesPage />} />
+                  <Route path="/scripts" element={<ScriptsPage />} />
+                  <Route path="/permissions" element={<PermissionsPage />} />
+                  <Route path="/docker" element={<DockerPage />} />
+                  <Route path="/system" element={<SystemPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Routes>

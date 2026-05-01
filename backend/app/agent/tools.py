@@ -177,9 +177,8 @@ async def run_full_audit() -> dict:
     return out
 
 
-# Ordered list passed to ChatGroq.bind_tools — the order roughly suggests
-# which tools the model should reach for first.
-TOOLS = [
+# Read-only tools first; write tools (gated by confirmation) come after.
+_READONLY_TOOLS = [
     get_metrics,
     list_processes,
     list_services,
@@ -195,6 +194,29 @@ TOOLS = [
     run_full_audit,
 ]
 
+
+def _gather_tools() -> list:
+    """Aggregate tools from every tools_*.py module that exposes a TOOLS list.
+    Importing here (lazy) keeps the import graph cycle-free with graph.py."""
+    out = list(_READONLY_TOOLS)
+    try:
+        from app.agent.tools_write import WRITE_TOOLS
+        out.extend(WRITE_TOOLS)
+    except ImportError:
+        pass
+    for modname in ("tools_firewall", "tools_updates", "tools_scripts",
+                    "tools_permissions", "tools_docker", "tools_system"):
+        try:
+            mod = __import__(f"app.agent.{modname}", fromlist=["TOOLS"])
+            extra = getattr(mod, "TOOLS", None)
+            if extra:
+                out.extend(extra)
+        except ImportError:
+            continue
+    return out
+
+
+TOOLS = _gather_tools()
 TOOLS_BY_NAME = {t.name: t for t in TOOLS}
 
 

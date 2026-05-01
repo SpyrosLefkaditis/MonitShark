@@ -14,6 +14,7 @@ langchain-core==0.3.21
 langchain-groq==0.2.1
 groq==0.13.0
 jc==1.25.3
+docker==7.1.0
 pystemd==0.13.2 ; sys_platform == "linux"
 httpx==0.27.2
 pyjwt[crypto]==2.10.1

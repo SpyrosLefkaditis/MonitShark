@@ -1,18 +1,13 @@
 """LangGraph state machine.
 
-Phase 6 graph (read-only, no confirmation gate yet):
+  START → planner → router → {tool_exec | END}
+  tool_exec → planner    (loop until LLM emits no more tool calls)
 
-    START → planner → router → {tool_exec | END}
-    tool_exec → planner   (loop until LLM emits no tool calls)
-
-`planner` is a Groq-backed ChatGroq with all read-only tools bound. `tool_exec`
-runs every tool call from the most recent AI message and appends ToolMessages.
-The router keeps looping until the LLM produces a final assistant turn with no
-tool calls.
-
-Phase 7 inserts a `confirmation_gate` node between `tool_exec` and the
-destructive tools — using `langgraph.types.interrupt` to pause the graph and
-surface a `confirm_request` frame over the WebSocket.
+`tool_exec` runs every tool call from the most recent AI message. Tools whose
+name is in `DESTRUCTIVE_TOOLS` are gated by `langgraph.types.interrupt`: the
+node pauses, the WS handler surfaces a `confirm_request` frame, the user
+replies with `confirm`, and the handler resumes the graph with
+`Command(resume={"decisions": {...}})`.
 """
 from __future__ import annotations
 
@@ -23,6 +18,7 @@ from langchain_core.messages import AIMessage, BaseMessage, SystemMessage, ToolM
 from langchain_groq import ChatGroq
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import interrupt
 
 from app.agent.prompts import SYSTEM_PROMPT
 from app.agent.schemas import AgentState
@@ -32,20 +28,63 @@ from app.config import settings
 logger = logging.getLogger("beacon.agent")
 
 
+def _gather_destructive_names() -> set[str]:
+    """Pull DESTRUCTIVE_NAMES from every tools_*.py that exposes it."""
+    out: set[str] = set()
+    for modname in ("tools_write", "tools_firewall", "tools_updates",
+                    "tools_scripts", "tools_permissions", "tools_docker"):
+        try:
+            mod = __import__(f"app.agent.{modname}", fromlist=["DESTRUCTIVE_NAMES"])
+            extra = getattr(mod, "DESTRUCTIVE_NAMES", None)
+            if extra:
+                out.update(extra)
+        except ImportError:
+            continue
+    return out
+
+
+DESTRUCTIVE_TOOLS: set[str] = _gather_destructive_names()
+
+
+def _summarize_tool_call(name: str, args: dict) -> str:
+    """Human-readable one-line description for the confirmation card."""
+    if name == "create_user":
+        u = args.get("username", "?")
+        flags = []
+        if args.get("sudo"): flags.append("sudo")
+        if args.get("password"): flags.append("password")
+        if args.get("ssh_public_key"): flags.append("SSH key")
+        suffix = f" with {', '.join(flags)}" if flags else ""
+        return f"Create Linux user '{u}'{suffix}"
+    if name == "add_ssh_key":
+        return f"Add an SSH public key to user '{args.get('username','?')}'"
+    if name == "lock_user":
+        return f"Lock user account '{args.get('username','?')}'"
+    if name == "unlock_user":
+        return f"Unlock user account '{args.get('username','?')}'"
+    if name == "set_user_password":
+        return f"Set password for user '{args.get('username','?')}'"
+    if name == "service_action":
+        return f"{args.get('action','?')} systemd service '{args.get('name','?')}'"
+    if name == "apply_audit_fix":
+        return f"Apply security fix '{args.get('fix_id','?')}'"
+    return f"{name}({args})"
+
+
+def _risk_of(name: str) -> str:
+    high = {"create_user", "set_user_password", "lock_user"}
+    med = {"add_ssh_key", "service_action", "apply_audit_fix", "unlock_user"}
+    if name in high: return "high"
+    if name in med: return "med"
+    return "low"
+
+
 def _get_llm() -> ChatGroq:
-    """Build the planner LLM. Lazy + per-request to keep things simple — the
-    underlying httpx client is reused via groq SDK pooling."""
-    # llama-3.3-70b is the highest-quality default but its free-tier TPM cap is
-    # tight (12k). llama-3.1-8b-instant has 30k TPM and is more forgiving for
-    # tool-call loops with chunky tool outputs. Switchable via GROQ_MODEL env.
-    # streaming=False: Groq's tool-using responses sometimes arrive with empty
-    # `.content` when streaming=True (the SDK's chunk reassembly skips the
-    # final text in some structured-output paths). We use astream_events to
-    # surface tool_call/tool_result frames; the final answer is sent in one
-    # `final` frame after invoke completes. Simpler + more reliable than
-    # token-by-token streaming for the hackathon demo.
+    # 70b-versatile gets us 12k TPM on free tier — needed because we bind ~50
+    # tools and each schema costs ~100 tokens per request. The 8b-instant
+    # model's 6k TPM limit is hit immediately.
     return ChatGroq(
-        model=getattr(settings, "groq_model", None) or "llama-3.1-8b-instant",
+        model=getattr(settings, "groq_model", None) or "llama-3.3-70b-versatile",
         api_key=settings.groq_api_key,
         temperature=0,
         timeout=60,
@@ -60,8 +99,6 @@ def _ensure_system_prompt(messages: list[BaseMessage]) -> list[BaseMessage]:
 
 
 async def _planner(state: AgentState) -> dict[str, Any]:
-    """Invoke the LLM. Returns a dict to merge into AgentState (langgraph
-    accumulates `messages` via `add_messages`)."""
     msgs = _ensure_system_prompt(list(state["messages"]))
     llm = _get_llm()
     response = await llm.ainvoke(msgs)
@@ -69,20 +106,61 @@ async def _planner(state: AgentState) -> dict[str, Any]:
 
 
 async def _tool_exec(state: AgentState) -> dict[str, Any]:
-    """Run every tool call from the last AI message and produce ToolMessages."""
+    """Run every tool call from the last AI message. Destructive tool calls are
+    batched into a single `interrupt()` so the user approves them in one go."""
     last = state["messages"][-1]
     if not isinstance(last, AIMessage) or not last.tool_calls:
         return {"messages": []}
+
+    pending_destructive = [tc for tc in last.tool_calls if tc["name"] in DESTRUCTIVE_TOOLS]
+
+    decisions: dict[str, str] = {}
+    if pending_destructive:
+        ops = []
+        for tc in pending_destructive:
+            ops.append({
+                "tool_call_id": tc.get("id") or "",
+                "tool": tc["name"],
+                "args": tc.get("args") or {},
+                "summary": _summarize_tool_call(tc["name"], tc.get("args") or {}),
+                "risk": _risk_of(tc["name"]),
+            })
+        # interrupt() raises GraphInterrupt; the graph state is checkpointed and
+        # astream yields a `__interrupt__` chunk to the WS handler. The handler
+        # resumes via Command(resume={"decisions": {...}}).
+        resume_value = interrupt({"pending_ops": ops})
+        if isinstance(resume_value, dict) and isinstance(resume_value.get("decisions"), dict):
+            decisions = {str(k): str(v) for k, v in resume_value["decisions"].items()}
+        elif isinstance(resume_value, str):
+            # Single decision applies to all (backward-compat / convenience).
+            for op in ops:
+                decisions[op["tool_call_id"]] = resume_value
+        else:
+            # Treat absence as denial.
+            for op in ops:
+                decisions[op["tool_call_id"]] = "deny"
+
     out: list[BaseMessage] = []
     for tc in last.tool_calls:
         name = tc["name"]
         args = tc.get("args") or {}
-        tool_call_id = tc.get("id") or name
+        tcid = tc.get("id") or name
         fn = TOOLS_BY_NAME.get(name)
+
+        if name in DESTRUCTIVE_TOOLS:
+            decision = decisions.get(tcid, "deny")
+            if decision != "approve":
+                out.append(ToolMessage(
+                    content=stringify_tool_output({"denied": True, "reason": "user did not approve"}),
+                    tool_call_id=tcid,
+                    name=name,
+                ))
+                continue
+
         if fn is None:
             out.append(ToolMessage(
                 content=stringify_tool_output({"error": f"unknown tool: {name}"}),
-                tool_call_id=tool_call_id,
+                tool_call_id=tcid,
                 name=name,
             ))
             continue
@@ -93,7 +171,7 @@ async def _tool_exec(state: AgentState) -> dict[str, Any]:
             result = {"error": repr(e)}
         out.append(ToolMessage(
             content=stringify_tool_output(result),
-            tool_call_id=tool_call_id,
+            tool_call_id=tcid,
             name=name,
         ))
     return {"messages": out}
@@ -121,9 +199,6 @@ _checkpointer: MemorySaver | None = None
 
 
 def get_compiled() -> Any:
-    """Compile-on-first-call pattern. MemorySaver (in-process) is fine for the
-    hackathon — it gives the planner the conversation history within a single
-    process lifetime; restarting the backend resets active threads."""
     global _compiled, _checkpointer
     if _compiled is None:
         _checkpointer = MemorySaver()

@@ -37,6 +37,7 @@ services:
     volumes:
       - /:/host:rw
       - /run/dbus:/run/dbus
+      - /var/run/docker.sock:/var/run/docker.sock
       - backend_data:/data
       - ./config:/config:rw
       - ./config.example:/config.example:ro
