@@ -1,0 +1,39 @@
+{
+	local_certs
+	admin off
+}
+
+:80 {
+	redir https://{host}{uri} permanent
+}
+
+https://localhost, https://127.0.0.1, https://{$EXTRA_HOSTNAME} {
+	tls internal
+	encode zstd gzip
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	basic_auth {
+		{$ADMIN_USER} {$ADMIN_PASS_HASH}
+	}
+
+	@api {
+		path /api/* /ws/*
+	}
+	handle @api {
+		reverse_proxy {$BACKEND_UPSTREAM}
+	}
+
+	handle {
+		root * /srv/www
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

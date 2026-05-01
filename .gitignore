@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env / data
+.env
+*.local
+backend/data/
+.coverage
+coverage/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Compose volumes copied locally (none yet)

@@ -1,0 +1,72 @@
+name: beacon
+
+services:
+  frontend-build:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: beacon/frontend-build:local
+    volumes:
+      - frontend_dist:/out
+    command: ["sh", "-c", "rm -rf /out/* && cp -r /app/dist/. /out/"]
+    restart: "no"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: beacon/backend:local
+    container_name: beacon-backend
+    restart: unless-stopped
+    privileged: true
+    pid: host
+    network_mode: host
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      BACKEND_BEARER_TOKEN: ${BACKEND_BEARER_TOKEN}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      HOST_ROOT: /host
+      DATA_DIR: /data
+      BIND_HOST: 127.0.0.1
+      BIND_PORT: 8000
+    volumes:
+      - /:/host:rw
+      - /run/dbus:/run/dbus
+      - backend_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: beacon-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASS_HASH: ${ADMIN_PASS_HASH}
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-host.docker.internal:8000}
+      EXTRA_HOSTNAME: ${EXTRA_HOSTNAME:-localhost}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - frontend_dist:/srv/www:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend-build:
+        condition: service_completed_successfully
+      backend:
+        condition: service_healthy
+
+volumes:
+  frontend_dist:
+  backend_data:
+  caddy_data:
+  caddy_config:

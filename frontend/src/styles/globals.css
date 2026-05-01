@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 6% 97%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+    --primary: 24 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 10%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 42%;
+    --accent: 240 5% 94%;
+    --accent-foreground: 240 10% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 24 95% 53%;
+  }
+
+  [data-theme="dark"] {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 8% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 8% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 24 95% 58%;
+    --primary-foreground: 0 0% 10%;
+    --secondary: 240 6% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 6% 12%;
+    --muted-foreground: 240 4% 65%;
+    --accent: 240 6% 14%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 6% 16%;
+    --input: 240 6% 16%;
+    --ring: 24 95% 58%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  .font-mono,
+  [data-tnum] {
+    font-variant-numeric: tabular-nums;
+  }
+}
