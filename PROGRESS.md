@@ -1,4 +1,4 @@
-# Beacon — implementation progress
+# MonitShark — implementation progress
 
 Tracks `/loop` phase completion. Source of truth for "what's the next phase to run."
 
@@ -36,7 +36,7 @@ Tracks `/loop` phase completion. Source of truth for "what's the next phase to r
 - `src/lib/utils.ts` — `cn()` helper.
 - `src/theme/provider.tsx` — `<ThemeProvider>` + `useTheme()` (light/dark, persisted in localStorage, follows system on first load).
 - `src/components/ui/*` (16 primitives) — Button, Card (+ Header/Title/Description/Content/Footer), Input, Textarea, Label, Badge, Skeleton, Separator, Dialog (+ Header/Footer/Title/Description/Overlay/Trigger/Close/Portal), Sheet (right-drawer for chat, with cva-driven `side` variants), Tooltip (+ Provider), ScrollArea (+ ScrollBar), Select (full Radix surface), Switch, Tabs (List/Trigger/Content), Sonner Toaster (theme-integrated wrapper).
-- `src/components/layout/*` — RootLayout (sidebar + topbar + main + chat-drawer-Sheet), Sidebar (5 NavLinks with lucide icons + brand), Topbar (page title + AlertsBadge + "Ask Beacon" button), ThemeToggle (sun/moon button), AlertsBadge (stub returning count=0; Phase 3 wires to /api/alerts).
+- `src/components/layout/*` — RootLayout (sidebar + topbar + main + chat-drawer-Sheet), Sidebar (5 NavLinks with lucide icons + brand), Topbar (page title + AlertsBadge + "Ask MonitShark" button), ThemeToggle (sun/moon button), AlertsBadge (stub returning count=0; Phase 3 wires to /api/alerts).
 - `src/pages/*` — DashboardPage, ServicesPage, CronPage, AuditPage, LogsPage, NotFoundPage. Each is a placeholder Card describing what lands in later phases.
 - `src/App.tsx` — composes ThemeProvider → QueryClientProvider → TooltipProvider → BrowserRouter → Routes (RootLayout wraps all routes) + Toaster.
 

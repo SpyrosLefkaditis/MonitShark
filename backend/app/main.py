@@ -1,4 +1,4 @@
-"""Beacon FastAPI application — wires routers, lifespan, background tasks."""
+"""MonitShark FastAPI application — wires routers, lifespan, background tasks."""
 from __future__ import annotations
 
 import asyncio
@@ -76,7 +76,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await db.connect()
     push_task = asyncio.create_task(_metrics_push_loop(), name="metrics-push")
     alerts_task = asyncio.create_task(_alerts_loop(), name="alerts-poller")
-    logger.info("Beacon backend ready (data_dir=%s, config_dir=%s)", settings.data_dir, settings.config_dir)
+    logger.info("MonitShark backend ready (data_dir=%s, config_dir=%s)", settings.data_dir, settings.config_dir)
     try:
         yield
     finally:
@@ -90,7 +90,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Beacon",
+        title="MonitShark",
         version="0.2.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",

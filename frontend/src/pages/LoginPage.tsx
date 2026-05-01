@@ -46,7 +46,7 @@ export function LoginPage() {
             <div className="size-8 rounded-md bg-primary/15 grid place-items-center text-primary">
               <ShieldCheck className="size-4" />
             </div>
-            <CardTitle className="text-base">Beacon</CardTitle>
+            <CardTitle className="text-base">MonitShark</CardTitle>
           </div>
           <CardDescription>Sign in to administer this host.</CardDescription>
         </CardHeader>

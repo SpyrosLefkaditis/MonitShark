@@ -46,7 +46,7 @@ export function ChatInput() {
             disabled
               ? "Resolve the confirmation above to continue…"
               : connected
-                ? "Message Beacon (Enter to send, Shift+Enter for newline)"
+                ? "Message MonitShark (Enter to send, Shift+Enter for newline)"
                 : "Connecting…"
           }
           disabled={disabled}

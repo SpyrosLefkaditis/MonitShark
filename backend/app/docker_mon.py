@@ -129,6 +129,23 @@ def _health_state(attrs: dict[str, Any]) -> str | None:
     return status if isinstance(status, str) else None
 
 
+def _safe_image(c: Any, attrs: dict[str, Any]) -> str:
+    """Resolve a container's image without failing when the image has been
+    pruned. The Docker SDK's `c.image` property triggers an inspect API call
+    that 404s for orphan layers — we never want to crash a list endpoint
+    because of one stale container."""
+    cfg_image = (attrs.get("Config") or {}).get("Image") or ""
+    try:
+        if c.image and c.image.tags:
+            return c.image.tags[0]
+    except (NotFound, APIError, AttributeError, IndexError):
+        pass
+    if cfg_image:
+        return cfg_image
+    image_id = attrs.get("Image") or ""
+    return image_id[:19] if image_id else ""
+
+
 def _container_summary(c: Any) -> dict[str, Any]:
     """Compact dict suitable for the list view."""
     attrs: dict[str, Any] = c.attrs or {}
@@ -137,7 +154,7 @@ def _container_summary(c: Any) -> dict[str, Any]:
         "id": c.id,
         "short_id": c.short_id,
         "name": _strip_name(c.name),
-        "image": (c.image.tags[0] if c.image and c.image.tags else (attrs.get("Config") or {}).get("Image", "")),
+        "image": _safe_image(c, attrs),
         "status": c.status,
         "state": state.get("Status") or c.status,
         "created": attrs.get("Created"),
@@ -145,6 +162,44 @@ def _container_summary(c: Any) -> dict[str, Any]:
         "labels": (attrs.get("Config") or {}).get("Labels") or {},
         "health": _health_state(attrs),
     }
+
+
+def _project_label(c: dict[str, Any]) -> str:
+    """Best-effort: which compose / stack / pod-namespace this container is in.
+    Falls back to the literal string 'standalone' for unmanaged containers."""
+    labels = c.get("labels") or {}
+    if not isinstance(labels, dict):
+        return "standalone"
+    return (
+        labels.get("com.docker.compose.project")
+        or labels.get("com.docker.stack.namespace")
+        or labels.get("io.kubernetes.pod.namespace")
+        or "standalone"
+    )
+
+
+def list_containers_grouped(all: bool = True) -> dict[str, Any]:
+    """List containers grouped by their compose project label. Useful for the
+    UI: render projects as collapsible sections instead of one flat list."""
+    containers = list_containers(all=all)
+    buckets: dict[str, list[dict[str, Any]]] = {}
+    for c in containers:
+        buckets.setdefault(_project_label(c), []).append(c)
+    out = []
+    for name in sorted(buckets):
+        items = buckets[name]
+        running = sum(
+            1 for c in items
+            if (c.get("state") or "").lower() == "running"
+            or (c.get("status") or "").lower().startswith("up")
+        )
+        out.append({
+            "name": name,
+            "container_count": len(items),
+            "running_count": running,
+            "containers": items,
+        })
+    return {"projects": out}
 
 
 def list_containers(all: bool = False) -> list[dict[str, Any]]:

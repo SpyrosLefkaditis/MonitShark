@@ -35,6 +35,19 @@ class ContainerActionIn(BaseModel):
     action: Literal["start", "stop", "restart", "pause", "unpause", "kill"]
 
 
+@router.get("/projects")
+async def list_projects(
+    _user: Annotated[User, Depends(get_current_user)],
+    all: bool = Query(True, description="Include stopped containers"),
+) -> dict:
+    """Containers grouped by docker-compose project label. Each entry has
+    name, container_count, running_count, and the full container list."""
+    try:
+        return dm.list_containers_grouped(all=all)
+    except dm.DockerMonError as e:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(e)) from e
+
+
 @router.get("/containers")
 async def list_containers(
     _user: Annotated[User, Depends(get_current_user)],

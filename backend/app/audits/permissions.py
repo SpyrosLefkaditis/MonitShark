@@ -214,7 +214,7 @@ def _scan_suid(now: float) -> list[Finding]:
                 title=f"Unexpected SUID-root binary: {base}",
                 description=(
                     f"{full} runs with root privileges via the SUID bit and "
-                    "is not on Beacon's standard allowlist. Verify the package "
+                    "is not on MonitShark's standard allowlist. Verify the package "
                     "that provides it, and consider removing the SUID bit "
                     "(`chmod u-s`) if the binary does not need it."
                 ),

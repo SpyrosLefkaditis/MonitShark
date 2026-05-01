@@ -1,5 +1,5 @@
 #!/bin/sh
-# Beacon — one-command bootstrap + run.
+# MonitShark — one-command bootstrap + run.
 #   ./start.sh           build + up -d
 #   ./start.sh logs      tail backend logs
 #   ./start.sh down      stop everything

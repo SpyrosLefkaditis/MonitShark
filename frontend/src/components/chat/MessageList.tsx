@@ -55,16 +55,56 @@ function renderMessage(
   }
 }
 
+// Lightweight content signature so the autoscroll effect re-fires whenever an
+// existing message GROWS (streaming tokens) or a tool_call's status flips —
+// not only when the array length changes. Without this the streaming
+// assistant bubble appends below the fold and the user can't see it without
+// closing+reopening the drawer.
+function contentSignature(state: { messages: ChatMessage[] }): string {
+  const out: string[] = [`n=${state.messages.length}`];
+  for (const m of state.messages) {
+    switch (m.kind) {
+      case "assistant":
+        out.push(`a:${m.id}:${m.text.length}:${m.streaming ? "s" : "f"}`);
+        break;
+      case "tool_call": {
+        const outLen = typeof m.output === "string" ? m.output.length : m.output ? 1 : 0;
+        out.push(`t:${m.id}:${m.status}:${outLen}`);
+        break;
+      }
+      case "user":
+        out.push(`u:${m.id}`);
+        break;
+      case "confirmation":
+        out.push(`c:${m.id}:${m.decision ?? "pending"}`);
+        break;
+      case "error":
+        out.push(`e:${m.id}`);
+        break;
+    }
+  }
+  return out.join("|");
+}
+
 export function MessageList() {
   const { state, respondConfirmation } = useChat();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const sig = contentSignature(state);
 
-  // Auto-scroll to bottom on any state change.
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTop = el.scrollHeight;
-  }, [state.messages]);
+    // requestAnimationFrame so layout has reflowed before we measure.
+    const id = requestAnimationFrame(() => {
+      const sentinel = bottomRef.current;
+      if (sentinel && typeof sentinel.scrollIntoView === "function") {
+        sentinel.scrollIntoView({ block: "end", behavior: "auto" });
+        return;
+      }
+      const c = scrollRef.current;
+      if (c) c.scrollTop = c.scrollHeight;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [sig]);
 
   if (state.messages.length === 0) {
     return (
@@ -73,7 +113,7 @@ export function MessageList() {
           <Sparkles className="size-5" />
         </div>
         <div>
-          <p className="text-sm font-medium">Ask Beacon anything about this host.</p>
+          <p className="text-sm font-medium">Ask MonitShark anything about this host.</p>
           <p className="text-xs text-muted-foreground mt-1">
             Try “summarize active alerts”, “tail /var/log/auth.log”, or “run a security audit”.
           </p>
@@ -85,6 +125,7 @@ export function MessageList() {
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
       {state.messages.map((m) => renderMessage(m, respondConfirmation))}
+      <div ref={bottomRef} aria-hidden className="h-px shrink-0" />
     </div>
   );
 }

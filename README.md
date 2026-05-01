@@ -1,10 +1,10 @@
-# Beacon
+# MonitShark
 
 **Self-hosted, AI-native Linux server admin console.** A web app you `docker compose up` on your own machine that gives you live monitoring, security auditing, user/firewall/cron/script management, Docker container observation, and a chat agent that *actually performs operations* on the host with explicit human approval.
 
 > Built for **Synapse Innovation Hack 2026**.
 >
-> **Trusted-admin tool.** Beacon runs a privileged container with full host access. Only run it on a Linux server you own and intend to administer. Anyone who can reach `https://<host>:443` with the admin credentials has root on this host.
+> **Trusted-admin tool.** MonitShark runs a privileged container with full host access. Only run it on a Linux server you own and intend to administer. Anyone who can reach `https://<host>:443` with the admin credentials has root on this host.
 
 ---
 
@@ -48,7 +48,7 @@ Three config files live under `config/` (auto-created on first boot from `config
 | **Firewall (UFW)** | Status + default policies. Add / delete rules with action + port + proto + source + comment. Enable/disable toggle. |
 | **Updates** | Distro-aware (apt/dnf). Security-only updates separately. Pending package list with current/new version. |
 | **Permissions** | File browser scoped to `/etc`, `/opt/cockpit`, `/var/log`, `/home`, `/root`. **chmod** (octal + checkbox grid) and **chown** with confirmation. |
-| **Logs** | Tail any file under `/var/log`. Regex search. **Ask Beacon to analyze** handoff to chat. |
+| **Logs** | Tail any file under `/var/log`. Regex search. **Ask MonitShark to analyze** handoff to chat. |
 
 ### The AI agent (Groq + LangGraph)
 

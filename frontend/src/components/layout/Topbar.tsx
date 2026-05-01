@@ -19,7 +19,7 @@ export function Topbar() {
   const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const { toggleDrawer } = useChat();
-  const title = TITLES[pathname] ?? "Beacon";
+  const title = TITLES[pathname] ?? "MonitShark";
   return (
     <header className="h-14 shrink-0 border-b border-border bg-card/60 backdrop-blur flex items-center justify-between px-6">
       <h1 className="text-base font-semibold tracking-tight">{title}</h1>
@@ -27,7 +27,7 @@ export function Topbar() {
         <AlertsBadge />
         <Button variant="outline" size="sm" onClick={toggleDrawer} className="gap-2">
           <MessageSquare className="size-4" />
-          <span>Ask Beacon</span>
+          <span>Ask MonitShark</span>
         </Button>
         {user ? (
           <div className="flex items-center gap-2 pl-2 border-l border-border">

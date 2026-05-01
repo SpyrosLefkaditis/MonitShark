@@ -129,7 +129,7 @@ def bootstrap_users() -> str | None:
         _save_users_raw(raw)
         return (
             "============================================================\n"
-            "Beacon bootstrap admin credentials (printed ONCE — record now):\n"
+            "MonitShark bootstrap admin credentials (printed ONCE — record now):\n"
             + "\n".join(notice_lines)
             + "\n============================================================"
         )

@@ -1,4 +1,4 @@
-# Beacon — 90-second demo video script
+# MonitShark — 90-second demo video script
 
 **Length target: 90 seconds** (Devpost's optional-but-strongly-recommended demo video has no hard cap, but judges skim. 60-90s is the sweet spot. If the video runs long, cut Section 4 first.)
 
@@ -17,7 +17,7 @@
 
 Plain dark background, title:
 
-> **Beacon — AI-native Linux server admin console**
+> **MonitShark — AI-native Linux server admin console**
 > *Synapse Innovation Hack 2026*
 
 Voiceover or text overlay:
@@ -55,7 +55,7 @@ Click **Audit** → **Run full audit** button. Findings populate, grouped by sev
 
 ### 0:44–0:60 — The agent does the work (16 s) ⭐ MONEY SHOT
 
-Click **Ask Beacon** (top right). The chat drawer slides open. Type:
+Click **Ask MonitShark** (top right). The chat drawer slides open. Type:
 
 > "Audit my SSH config and tell me the most severe issue."
 
@@ -87,7 +87,7 @@ demo:x:1001:1001::/home/demo:/bin/bash
 Quick cuts: **Firewall** (UFW rules table) → **Updates** (security updates list) → **Docker** (live container logs scrolling) → **Permissions** (file picker → chmod dialog).
 
 End card:
-> **Beacon. Self-hosted. AI-acted. Human-approved.**
+> **MonitShark. Self-hosted. AI-acted. Human-approved.**
 > *github.com/<...>/beacon*
 
 ---

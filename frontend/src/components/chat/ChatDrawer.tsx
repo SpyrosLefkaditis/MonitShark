@@ -21,10 +21,10 @@ export function ChatDrawer() {
         <header className="px-4 py-3 border-b border-border flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="size-7 rounded-md bg-primary/15 grid place-items-center text-primary">
-              <span className="text-xs font-bold">B</span>
+              <span className="text-xs font-bold">M</span>
             </div>
             <div>
-              <div className="text-sm font-semibold leading-tight">Beacon AI</div>
+              <div className="text-sm font-semibold leading-tight">MonitShark AI</div>
               <div className="text-[11px] text-muted-foreground leading-tight">
                 Conversational system administration
               </div>

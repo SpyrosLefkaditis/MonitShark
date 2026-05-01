@@ -78,7 +78,7 @@ async def audit_ssh_config() -> AuditReport:
             severity="info",
             title="Could not read sshd_config",
             description=(
-                "An error prevented Beacon from reading /etc/ssh/sshd_config; "
+                "An error prevented MonitShark from reading /etc/ssh/sshd_config; "
                 "fix the file permissions or ownership so the audit can run."
             ),
             evidence={"path": str(SSHD_CONFIG), "error": str(e)},

@@ -11,7 +11,9 @@ replies with `confirm`, and the handler resumes the graph with
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+import time
 from typing import Any
 
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage, ToolMessage
@@ -25,8 +27,15 @@ from app.agent.schemas import AgentState
 from app.agent.tools import TOOLS, TOOLS_BY_NAME, stringify_tool_output
 from app.config import settings
 
-logger = logging.getLogger("beacon.agent")
 
+# Throttle outgoing Groq calls so we don't burst into the per-minute / per-day
+# rate limits. The free tier is ~12k TPM / 100k TPD on the 70b-versatile model;
+# with ~50 bound tools each call costs 5-8k tokens. Spacing calls at 2.5s
+# spreads steady usage to ~24 calls/min ceiling — safe headroom.
+_MIN_PLANNER_INTERVAL_S = 2.5
+_planner_gate = asyncio.Lock()
+_last_planner_at = 0.0
+logger = logging.getLogger("beacon.agent")
 
 def _gather_destructive_names() -> set[str]:
     """Pull DESTRUCTIVE_NAMES from every tools_*.py that exposes it."""
@@ -98,10 +107,42 @@ def _ensure_system_prompt(messages: list[BaseMessage]) -> list[BaseMessage]:
     return [SystemMessage(content=SYSTEM_PROMPT), *messages]
 
 
+async def _throttle() -> None:
+    """Enforce a minimum interval between outgoing Groq calls."""
+    global _last_planner_at
+    async with _planner_gate:
+        elapsed = time.monotonic() - _last_planner_at
+        if elapsed < _MIN_PLANNER_INTERVAL_S:
+            await asyncio.sleep(_MIN_PLANNER_INTERVAL_S - elapsed)
+        _last_planner_at = time.monotonic()
+
+
+def _format_rate_limit(err: Exception) -> str:
+    s = str(err)
+    if "tokens per day" in s.lower() or "TPD" in s:
+        return ("Daily Groq token budget exhausted. The free tier resets at midnight UTC. "
+                "Set GROQ_MODEL=llama-3.1-8b-instant in .env for higher daily limits, "
+                "or upgrade to the dev tier.")
+    if "tokens per minute" in s.lower() or "TPM" in s:
+        return ("Per-minute Groq token limit hit — please wait ~30 seconds and try again, "
+                "or shorten your question.")
+    if "429" in s or "rate_limit" in s.lower():
+        return "Groq rate limit hit. Please wait a moment and try again."
+    return ""
+
+
 async def _planner(state: AgentState) -> dict[str, Any]:
     msgs = _ensure_system_prompt(list(state["messages"]))
     llm = _get_llm()
-    response = await llm.ainvoke(msgs)
+    await _throttle()
+    try:
+        response = await llm.ainvoke(msgs)
+    except Exception as e:
+        friendly = _format_rate_limit(e)
+        if friendly:
+            logger.warning("planner rate-limited: %s", e)
+            return {"messages": [AIMessage(content=friendly)]}
+        raise
     return {"messages": [response]}
 
 

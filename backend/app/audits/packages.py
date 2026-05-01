@@ -139,7 +139,7 @@ async def audit_packages() -> AuditReport:
             severity="info",
             title="Distribution not supported by package audit",
             description=(
-                "Beacon's package audit currently understands apt-based "
+                "MonitShark's package audit currently understands apt-based "
                 "(Debian/Ubuntu/Raspbian) and dnf-based (Fedora/RHEL/CentOS/"
                 "Rocky/AlmaLinux) systems. The detected distribution "
                 f"({distro_id or 'unknown'}) is outside that set, so the audit "

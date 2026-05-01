@@ -56,6 +56,17 @@ def docker_get_container_stats(container_id: str) -> dict:
 
 
 @tool
+def docker_list_projects(all: bool = True) -> dict:
+    """List Docker containers grouped by their docker-compose project label.
+    Each project entry has name, container_count, running_count, and a list
+    of containers. Use this for a project-aware overview."""
+    try:
+        return dm.list_containers_grouped(all=bool(all))
+    except (dm.DockerMonError, ValueError) as e:
+        return _err(e)
+
+
+@tool
 def docker_container_action(
     container_id: str,
     action: Literal["start", "stop", "restart", "pause", "unpause", "kill"],
@@ -71,6 +82,7 @@ def docker_container_action(
 
 TOOLS = [
     docker_list_containers,
+    docker_list_projects,
     docker_get_container,
     docker_get_container_stats,
     docker_container_action,

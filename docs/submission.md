@@ -1,4 +1,4 @@
-# Beacon — Synapse Innovation Hack 2026 Submission
+# MonitShark — Synapse Innovation Hack 2026 Submission
 
 The 7 Devpost sections, ready to paste.
 
@@ -6,9 +6,9 @@ The 7 Devpost sections, ready to paste.
 
 ## 1. Project Title and Description
 
-**Beacon — AI-native Linux server admin console.**
+**MonitShark — AI-native Linux server admin console.**
 
-Beacon is a self-hosted web application that runs in Docker on a Linux server and gives administrators a single, live, AI-augmented control plane: real-time monitoring, security auditing, user / firewall / cron / script management, Docker observation, and a chat agent that performs operations on the host with explicit human approval.
+MonitShark is a self-hosted web application that runs in Docker on a Linux server and gives administrators a single, live, AI-augmented control plane: real-time monitoring, security auditing, user / firewall / cron / script management, Docker observation, and a chat agent that performs operations on the host with explicit human approval.
 
 It is Cockpit + Netdata + Dozzle + a sysadmin copilot, in one box, accessed at `https://<your-host>/`.
 
@@ -22,7 +22,7 @@ Three real, common problems converge:
 2. **Tool fragmentation**. Cockpit shows you state but doesn't reason about it. Netdata shows metrics but doesn't act. Dozzle shows Docker logs in isolation. UFW is a CLI. Apt-listchanges is email. Sysadmins context-switch across 10 tools to do one job.
 3. **AI agents that talk vs. agents that act**. Most "AI assistants" can describe what an admin should do; very few can do it safely on a real host with proper auditability and consent.
 
-Beacon addresses all three: one console, AI that calls real tools on the real host, and a confirmation gate enforced in the agent's state machine — not in trust.
+MonitShark addresses all three: one console, AI that calls real tools on the real host, and a confirmation gate enforced in the agent's state machine — not in trust.
 
 ---
 
@@ -91,7 +91,7 @@ The agent is the differentiator: 51 LangChain tools wrap the same Python modules
 
 ## 7. Team Information
 
-**Spyros Lefkaditis** — solo. Computer science student. AI solutions engineer; strong in cybersecurity. Built and shipped Beacon end-to-end during the Synapse Innovation Hack 2026 window.
+**Spyros Lefkaditis** — solo. Computer science student. AI solutions engineer; strong in cybersecurity. Built and shipped MonitShark end-to-end during the Synapse Innovation Hack 2026 window.
 
 Contributions: project conception, architecture, every line of design choice, end-to-end implementation across backend (Python/FastAPI/LangGraph), frontend (React/TypeScript/Tailwind), DevOps (Docker, Caddy, JWT auth), agent integration (Groq + LangGraph confirmation gate), security model, testing, and documentation.
 

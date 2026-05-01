@@ -18,7 +18,7 @@ export function AnalyzeButton({ path, lines, disabled }: Props) {
   return (
     <Button variant="outline" size="sm" onClick={onClick} disabled={disabled} className="gap-1.5">
       <Sparkles className="size-3.5" />
-      Ask Beacon to analyze
+      Ask MonitShark to analyze
     </Button>
   );
 }

@@ -1,4 +1,4 @@
-# Beacon user accounts. Copy to config/users.yml and edit.
+# MonitShark user accounts. Copy to config/users.yml and edit.
 #
 # - On first boot, if `password_hash` is empty for a user, the entrypoint
 #   generates a random password, bcrypt-hashes it, writes it back to this

@@ -39,7 +39,7 @@ export function Sidebar() {
         <div className="size-8 rounded-md bg-primary/15 grid place-items-center text-primary">
           <ShieldCheck className="size-4" />
         </div>
-        <div className="font-semibold tracking-tight">Beacon</div>
+        <div className="font-semibold tracking-tight">MonitShark</div>
       </div>
       <Separator />
       <nav className="flex-1 p-2 space-y-1">
