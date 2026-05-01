@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { AuthGate } from "@/auth/AuthGate";
 import { AuthProvider } from "@/auth/AuthProvider";
+import { ChatProvider } from "@/chat/ChatProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RootLayout } from "@/components/layout/RootLayout";
@@ -33,7 +34,9 @@ export default function App() {
                 <Route
                   element={
                     <AuthGate>
-                      <RootLayout />
+                      <ChatProvider>
+                        <RootLayout />
+                      </ChatProvider>
                     </AuthGate>
                   }
                 >

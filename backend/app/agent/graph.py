@@ -38,6 +38,12 @@ def _get_llm() -> ChatGroq:
     # llama-3.3-70b is the highest-quality default but its free-tier TPM cap is
     # tight (12k). llama-3.1-8b-instant has 30k TPM and is more forgiving for
     # tool-call loops with chunky tool outputs. Switchable via GROQ_MODEL env.
+    # streaming=False: Groq's tool-using responses sometimes arrive with empty
+    # `.content` when streaming=True (the SDK's chunk reassembly skips the
+    # final text in some structured-output paths). We use astream_events to
+    # surface tool_call/tool_result frames; the final answer is sent in one
+    # `final` frame after invoke completes. Simpler + more reliable than
+    # token-by-token streaming for the hackathon demo.
     return ChatGroq(
         model=getattr(settings, "groq_model", None) or "llama-3.1-8b-instant",
         api_key=settings.groq_api_key,

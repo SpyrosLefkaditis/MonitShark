@@ -7,6 +7,7 @@ destructive tools land.
 """
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import logging
@@ -14,7 +15,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from app.agent.graph import get_compiled
 from app.auth import User, get_current_user, get_current_user_ws
@@ -106,50 +107,61 @@ async def chat_ws(websocket: WebSocket) -> None:
                 continue
 
             try:
-                token_buffer = ""
-                async for event in graph.astream_events(
+                # `astream(stream_mode="updates")` yields one dict per node
+                # transition: `{node_name: state_update}`. We surface tool
+                # calls + results in real time as nodes complete, then read
+                # the final AI message from the persisted state.
+                async for update in graph.astream(
                     {"messages": [HumanMessage(content=user_text)]},
                     config=config,
-                    version="v2",
+                    stream_mode="updates",
                 ):
-                    et = event.get("event")
-                    if et == "on_chat_model_stream":
-                        chunk = event.get("data", {}).get("chunk")
-                        if chunk is None:
-                            continue
-                        piece = getattr(chunk, "content", "") or ""
-                        if isinstance(piece, list):
-                            piece = "".join(
-                                b.get("text", "") for b in piece if isinstance(b, dict)
-                            )
-                        if piece:
-                            token_buffer += piece
-                            await _send({"type": "token", "text": piece})
-                    elif et == "on_tool_start":
-                        await _send({
-                            "type": "tool_call",
-                            "id": str(event.get("run_id") or ""),
-                            "name": event.get("name", ""),
-                            "args": _safe_args(event.get("data", {}).get("input")),
-                        })
-                    elif et == "on_tool_end":
-                        await _send({
-                            "type": "tool_result",
-                            "id": str(event.get("run_id") or ""),
-                            "name": event.get("name", ""),
-                            "output": _truncate(event.get("data", {}).get("output")),
-                            "ok": True,
-                        })
+                    for node_name, node_update in (update or {}).items():
+                        new_msgs = (node_update or {}).get("messages") or []
+                        if node_name == "planner":
+                            for m in new_msgs:
+                                if isinstance(m, AIMessage) and m.tool_calls:
+                                    for tc in m.tool_calls:
+                                        await _send({
+                                            "type": "tool_call",
+                                            "id": str(tc.get("id") or ""),
+                                            "name": tc.get("name") or "",
+                                            "args": _safe_args(tc.get("args")),
+                                        })
+                        elif node_name == "tool_exec":
+                            for m in new_msgs:
+                                if isinstance(m, ToolMessage):
+                                    await _send({
+                                        "type": "tool_result",
+                                        "id": str(getattr(m, "tool_call_id", "") or ""),
+                                        "name": getattr(m, "name", "") or "",
+                                        "output": _truncate(m.content),
+                                        "ok": True,
+                                    })
 
                 state = await graph.aget_state(config)
                 msgs = state.values.get("messages", []) if state and state.values else []
-                final_msg = next((m for m in reversed(msgs) if isinstance(m, AIMessage)), None)
-                final_text = getattr(final_msg, "content", "") if final_msg else token_buffer
+                final_msg = next(
+                    (m for m in reversed(msgs)
+                     if isinstance(m, AIMessage)
+                     and not getattr(m, "tool_calls", None)),
+                    None,
+                )
+                final_text = getattr(final_msg, "content", "") if final_msg else ""
                 if isinstance(final_text, list):
                     final_text = "".join(
                         b.get("text", "") for b in final_text if isinstance(b, dict)
                     )
-                await _send({"type": "final", "text": final_text or token_buffer or "(no answer)"})
+                if not (final_text or "").strip():
+                    final_text = "(The agent ran but returned no textual answer — try rephrasing.)"
+
+                # Typewriter-stream the final text so the client sees a token
+                # animation even though Groq returned it whole.
+                CHUNK = 32
+                for i in range(0, len(final_text), CHUNK):
+                    await _send({"type": "token", "text": final_text[i:i + CHUNK]})
+                    await asyncio.sleep(0.012)
+                await _send({"type": "final", "text": final_text})
 
             except WebSocketDisconnect:
                 return
