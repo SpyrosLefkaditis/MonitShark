@@ -87,12 +87,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log("GO\n");
 
   // ───── 0:00 — type credentials, click Sign In ─────
+  // The login form preloads the username with "admin", so we triple-click
+  // to select the existing text — typing then REPLACES it instead of
+  // appending and producing "adminadmin".
   console.log("[0:00] type creds + sign in");
-  await page.locator('input[id="username"]').click();
-  await page.locator('input[id="username"]').type(USER, { delay: 80 });
+  const usernameField = page.locator('input[id="username"]');
+  await usernameField.click({ clickCount: 3 });
+  await sleep(150);
+  await usernameField.type(USER, { delay: 80 });
   await sleep(300);
-  await page.locator('input[id="password"]').click();
-  await page.locator('input[id="password"]').type(PASS, { delay: 70 });
+  const passwordField = page.locator('input[id="password"]');
+  await passwordField.click({ clickCount: 3 });
+  await sleep(120);
+  await passwordField.type(PASS, { delay: 70 });
   await sleep(500);
   await page.click('button[type="submit"]');
   await sleep(18500); // dashboard loads, live metrics visible — ends ~0:21
