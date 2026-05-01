@@ -37,7 +37,7 @@ echo "voiceover: ${VOICE_LEN}s   capture: ${CAP_LEN}s"
 # output stays 1920x1080 and concats cleanly with the intro/outro cards.
 ffmpeg -loglevel error -y \
     -i "$CAPTURE" -i "$VOICE" \
-    -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1:color=black,fps=30,setsar=1,crop=1920:1020:0:0,pad=1920:1080:0:0:color=0x0a0a0c[v];[1:a]apad=whole_dur=${CAP_LEN},aformat=channel_layouts=stereo:sample_rates=48000[a]" \
+    -filter_complex "[0:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:-1:-1:color=black,fps=30,setsar=1,crop=1920:980:0:0,pad=1920:1080:0:0:color=0x0a0a0c[v];[1:a]apad=whole_dur=${CAP_LEN},aformat=channel_layouts=stereo:sample_rates=48000[a]" \
     -map "[v]" -map "[a]" -t "$CAP_LEN" \
     -c:v libx264 -pix_fmt yuv420p -c:a aac -b:a 192k -ar 48000 -ac 2 \
     "$DIR/.middle.mp4"
