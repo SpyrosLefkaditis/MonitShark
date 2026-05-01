@@ -4,10 +4,8 @@ Sign in, and you land on a live dashboard. CPU, memory, disk, and network — al
 
 The System tab goes deeper. Per-core CPU, every disk's I/O, all your network interfaces, and live temperature sensors.
 
-Now click Audit, then Run Full Audit. The agent inspects SSH configuration, user accounts, file permissions, and pending packages. Findings come back ranked by severity, with evidence and a one-click fix.
+Click Audit, then Run Full Audit. The agent inspects SSH configuration, user accounts, file permissions, and pending packages. Findings come back ranked by severity, with evidence, and a one-click fix.
 
-Open the chat. Ask: audit my SSH and tell me the most severe issue. MonitShark calls the audit tool, then explains the results in plain English.
-
-Now ask it to do something destructive. Create a Linux user named demo, with sudo, and my SSH key. A confirmation card slides in. You decide. Click Allow — and the user is actually created on the host.
+Open the chat. Ask: audit my SSH and tell me the most severe issue. MonitShark calls the audit tool, then explains the result in plain English. The same chat can also act on the host — create users, restart services, apply security updates. But every destructive action requires an explicit click to approve. The agent proposes; you decide.
 
 Firewall rules. Pending OS updates. Docker containers grouped by Compose project. File permissions. All in one console. All AI-augmented. All human-confirmed.
