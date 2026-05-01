@@ -1,6 +1,7 @@
-import { MessageSquare } from "lucide-react";
+import { LogOut, MessageSquare } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 
 import { AlertsBadge } from "./AlertsBadge";
@@ -15,6 +16,7 @@ const TITLES: Record<string, string> = {
 
 export function Topbar({ onChatToggle }: { onChatToggle: () => void }) {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
   const title = TITLES[pathname] ?? "Beacon";
   return (
     <header className="h-14 shrink-0 border-b border-border bg-card/60 backdrop-blur flex items-center justify-between px-6">
@@ -25,6 +27,22 @@ export function Topbar({ onChatToggle }: { onChatToggle: () => void }) {
           <MessageSquare className="size-4" />
           <span>Ask Beacon</span>
         </Button>
+        {user ? (
+          <div className="flex items-center gap-2 pl-2 border-l border-border">
+            <span className="text-xs text-muted-foreground font-mono hidden sm:inline">
+              {user.username}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={logout}
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut className="size-4" />
+            </Button>
+          </div>
+        ) : null}
       </div>
     </header>
   );

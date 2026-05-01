@@ -20,19 +20,26 @@ services:
     restart: unless-stopped
     privileged: true
     pid: host
-    network_mode: host
+    # NOT network_mode: host — backend stays on the compose bridge so Caddy
+    # reaches it via the service name `backend:8000`. pid=host + bind-mount /
+    # are what give us host management; network_mode is independent.
     environment:
       GROQ_API_KEY: ${GROQ_API_KEY}
-      BACKEND_BEARER_TOKEN: ${BACKEND_BEARER_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: ${LOG_LEVEL:-info}
       HOST_ROOT: /host
       DATA_DIR: /data
-      BIND_HOST: 127.0.0.1
+      CONFIG_DIR: /config
+      BIND_HOST: 0.0.0.0
       BIND_PORT: 8000
+    expose:
+      - "8000"
     volumes:
       - /:/host:rw
       - /run/dbus:/run/dbus
       - backend_data:/data
+      - ./config:/config:rw
+      - ./config.example:/config.example:ro
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
       interval: 10s
@@ -45,15 +52,11 @@ services:
     container_name: beacon-caddy
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     environment:
-      ADMIN_USER: ${ADMIN_USER}
-      ADMIN_PASS_HASH: ${ADMIN_PASS_HASH}
-      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-host.docker.internal:8000}
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-backend:8000}
       EXTRA_HOSTNAME: ${EXTRA_HOSTNAME:-localhost}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - frontend_dist:/srv/www:ro

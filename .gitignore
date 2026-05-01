@@ -21,6 +21,10 @@ backend/data/
 .coverage
 coverage/
 
+# Per-deployment runtime config (the example/ dir is committed)
+/config/
+!/config.example/
+
 # Editor / OS
 .idea/
 .vscode/

@@ -1,0 +1,9 @@
+# Port configuration. Copy this to config/port.yml and edit. The numbers below
+# are the host-side ports Caddy binds. Internal container ports stay fixed.
+ports:
+  http: 80     # bare-HTTP redirector. Change if 80 is taken.
+  https: 443   # the only port you need open. Change if 443 is taken.
+
+backend:
+  bind_host: 127.0.0.1
+  bind_port: 8000

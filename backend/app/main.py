@@ -1,28 +1,105 @@
+"""Beacon FastAPI application — wires routers, lifespan, background tasks."""
 from __future__ import annotations
 
-import time
+import asyncio
+import contextlib
+import logging
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 
-START_TIME = time.monotonic()
-VERSION = "0.1.0"
+from app import alerts as alerts_mod
+from app import metrics as metrics_mod
+from app.config import settings
+from app.db import db
+from app.routes import (
+    alerts as alerts_routes,
+    audits as audits_routes,
+    auth as auth_routes,
+    chat as chat_routes,
+    cron as cron_routes,
+    health as health_routes,
+    logs as logs_routes,
+    metrics as metrics_routes,
+    services as services_routes,
+)
+
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger("beacon")
+
+
+async def _metrics_push_loop() -> None:
+    """1Hz background snapshot push for the rolling buffer used by /ws/metrics."""
+    while True:
+        try:
+            metrics_mod.push()
+        except Exception:
+            logger.exception("metrics push failed")
+        try:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            return
+
+
+async def _alerts_loop() -> None:
+    """Wraps the alerts poller; restarts on unexpected exit."""
+    while True:
+        try:
+            await alerts_mod.poller_task()
+        except asyncio.CancelledError:
+            return
+        except Exception:
+            logger.exception("alerts poller crashed; restarting in 5s")
+            try:
+                await asyncio.sleep(5)
+            except asyncio.CancelledError:
+                return
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    await db.connect()
+    push_task = asyncio.create_task(_metrics_push_loop(), name="metrics-push")
+    alerts_task = asyncio.create_task(_alerts_loop(), name="alerts-poller")
+    logger.info("Beacon backend ready (data_dir=%s, config_dir=%s)", settings.data_dir, settings.config_dir)
+    try:
+        yield
+    finally:
+        for t in (push_task, alerts_task):
+            t.cancel()
+        for t in (push_task, alerts_task):
+            with contextlib.suppress(asyncio.CancelledError):
+                await t
+        await db.close()
 
 
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Beacon",
-        version=VERSION,
+        version="0.2.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
 
-    @app.get("/api/health")
-    async def health() -> dict:
-        return {
-            "ok": True,
-            "version": VERSION,
-            "uptime_s": round(time.monotonic() - START_TIME, 2),
-        }
+    # REST
+    app.include_router(health_routes.router)
+    app.include_router(auth_routes.router)
+    app.include_router(metrics_routes.router)
+    app.include_router(services_routes.router)
+    app.include_router(cron_routes.router)
+    app.include_router(logs_routes.router)
+    app.include_router(audits_routes.router)
+    app.include_router(alerts_routes.router)
+    app.include_router(chat_routes.router)
+
+    # WebSockets
+    app.include_router(metrics_routes.ws_router)
+    app.include_router(chat_routes.ws_router)
 
     return app
 

@@ -1,0 +1,19 @@
+# Beacon user accounts. Copy to config/users.yml and edit.
+#
+# - On first boot, if `password_hash` is empty for a user, the entrypoint
+#   generates a random password, bcrypt-hashes it, writes it back to this
+#   file, and PRINTS the password ONCE to the container logs. Grab it from
+#   `docker compose logs backend` and log in with it; change it after.
+# - To set a password manually: run
+#       docker run --rm -ti python:3.11-slim sh -c \
+#         "pip install -q passlib[bcrypt] && python -c \
+#          'from passlib.hash import bcrypt; import getpass; \
+#           print(bcrypt.hash(getpass.getpass()))'"
+#   …and paste the printed hash into `password_hash`.
+#
+# Roles: "admin" can do everything. Other roles reserved for the future.
+
+users:
+  - username: admin
+    password_hash: ""
+    role: admin

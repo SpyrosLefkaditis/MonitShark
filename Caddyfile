@@ -1,3 +1,4 @@
+# Beacon Caddyfile — TLS reverse proxy. No auth here; backend issues JWT.
 {
 	local_certs
 	admin off
@@ -15,10 +16,7 @@ https://localhost, https://127.0.0.1, https://{$EXTRA_HOSTNAME} {
 		respond "ok" 200
 	}
 
-	basic_auth {
-		{$ADMIN_USER} {$ADMIN_PASS_HASH}
-	}
-
+	# Backend API + WebSockets
 	@api {
 		path /api/* /ws/*
 	}
@@ -26,6 +24,7 @@ https://localhost, https://127.0.0.1, https://{$EXTRA_HOSTNAME} {
 		reverse_proxy {$BACKEND_UPSTREAM}
 	}
 
+	# Static SPA + history-mode fallback
 	handle {
 		root * /srv/www
 		try_files {path} /index.html

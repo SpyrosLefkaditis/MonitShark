@@ -6,8 +6,8 @@ Tracks `/loop` phase completion. Source of truth for "what's the next phase to r
 
 - [x] **Phase 0** — Repo bootstrap & one-command compose — *2026-05-01*
 - [x] **Phase 1** — Frontend layout, theme, design system — *2026-05-01*
-- [ ] **Phase 2** — Backend read-only system surface + REST
-- [ ] **Phase 3** — WebSocket metrics + alerts engine
+- [x] **Phase 2** — Backend read-only system surface + REST — *2026-05-01*
+- [x] **Phase 3** — WebSocket metrics + alerts engine — *2026-05-01* (folded into Phase 2; verified live)
 - [ ] **Phase 4** — Frontend pages with REST data
 - [ ] **Phase 5** — Live metrics over WebSocket
 - [ ] **Phase 6** — Agent skeleton with read-only tools
