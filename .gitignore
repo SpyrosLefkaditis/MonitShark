@@ -35,6 +35,12 @@ docs/video/screen-capture*.mp4
 docs/video/final.mp4
 docs/video/recording.webm
 docs/video/.video-tmp/
+docs/video/.middle.mp4
+docs/video/.intro_av.mp4
+docs/video/.outro_av.mp4
+docs/video/.concat.txt
+docs/video/*.wav
+/tmp/ms-*/
 
 # Playwright browsers + the venv used by build.sh
 docs/video/.tts-venv/
