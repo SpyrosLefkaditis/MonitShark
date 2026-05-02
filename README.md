@@ -8,6 +8,22 @@
 
 ---
 
+## See it in action
+
+**Live dashboard — CPU, memory, disk, network all streaming over WebSockets:**
+
+![Dashboard](docs/screenshots/01-dashboard.gif)
+
+**Security audit — agent finds real misconfigurations on the host:**
+
+![Audit + chat](docs/screenshots/02-audit-chat.gif)
+
+**Agent answers in plain English, citing the tool it called and the evidence:**
+
+![Agent answer](docs/screenshots/03-agent.gif)
+
+---
+
 ## Quick start
 
 ```bash
